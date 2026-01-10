@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { AppView, Transaction } from './types';
 import { getTransactions } from './services/storageService';
-import { auth, onAuthStateChanged, signOut } from './services/firebase';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { Login } from './components/Login';
@@ -23,16 +22,14 @@ const App: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Monitor Auth State
+  // Monitor Auth State (Local)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-      if (currentUser) {
-        refreshData();
-      }
-    });
-    return () => unsubscribe();
+    const storedUser = localStorage.getItem('adbfc_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      refreshData();
+    }
+    setAuthLoading(false);
   }, []);
 
   // History Handling
@@ -63,17 +60,24 @@ const App: React.FC = () => {
     }
   };
 
+  const handleLogin = (userData: any) => {
+    localStorage.setItem('adbfc_user', JSON.stringify(userData));
+    setUser(userData);
+    refreshData();
+  };
+
+  const handleLogout = async () => {
+    localStorage.removeItem('adbfc_user');
+    setUser(null);
+    setTransactions([]);
+  };
+
   const navigateTo = (view: AppView) => {
     if (currentView !== view) {
       setCurrentView(view);
       window.history.pushState({ view }, '');
     }
     setSidebarOpen(false);
-  };
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    setTransactions([]);
   };
 
   const navItems = [
@@ -90,7 +94,7 @@ const App: React.FC = () => {
   }
 
   if (!user) {
-    return <Login />;
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
@@ -156,10 +160,10 @@ const App: React.FC = () => {
               className="w-full flex items-center gap-2 justify-center p-2 text-indigo-300 hover:text-white hover:bg-indigo-800 rounded-lg transition"
             >
               <LogOut size={18} />
-              <span className="text-sm font-medium">Sign Out</span>
+              <span className="text-sm font-medium">Exit</span>
             </button>
             <div className="mt-4 text-center text-xs text-indigo-400">
-              v1.0.0 • Server: Firebase
+              v1.1.0 • Local Mode
             </div>
           </div>
         </div>
@@ -182,7 +186,7 @@ const App: React.FC = () => {
             {dataLoading ? (
                <div className="flex items-center justify-center h-64">
                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                 <span className="ml-3 text-gray-500">Syncing data...</span>
+                 <span className="ml-3 text-gray-500">Loading data...</span>
                </div>
             ) : (
               <>
