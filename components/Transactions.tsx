@@ -18,7 +18,8 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onUpda
     quantity: 1,
     costPrice: 80,
     sellPrice: 120,
-    shopName: ''
+    shopName: '',
+    notes: ''
   });
 
   const [filterStart, setFilterStart] = useState('');
@@ -33,22 +34,31 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onUpda
       const newTransaction: Transaction = {
         id: crypto.randomUUID(), // Note: Firestore will generate its own ID, this is for local or optimism
         date: formData.date!,
-        shopName: formData.shopName,
+        shopName: formData.shopName!,
         bulbType: formData.bulbType!,
         quantity: Number(formData.quantity),
         costPrice: Number(formData.costPrice),
         sellPrice: Number(formData.sellPrice),
         type: formData.type as 'SALE' | 'REPLACEMENT',
-        notes: formData.notes
+        notes: formData.notes || '' // Ensure no undefined values
       };
 
       await saveTransaction(newTransaction);
       onUpdate(); // Trigger refresh in parent
       setShowForm(false);
-      setFormData(prev => ({ ...prev, shopName: '', quantity: 1 }));
-    } catch (error) {
+      setFormData({
+        type: 'SALE',
+        date: new Date().toISOString().split('T')[0],
+        bulbType: '9W',
+        quantity: 1,
+        costPrice: 80,
+        sellPrice: 120,
+        shopName: '',
+        notes: ''
+      });
+    } catch (error: any) {
       console.error("Failed to save", error);
-      alert("Failed to save transaction. Please check your connection.");
+      alert(`Failed to save transaction: ${error.message || "Unknown error"}`);
     } finally {
       setIsSubmitting(false);
     }

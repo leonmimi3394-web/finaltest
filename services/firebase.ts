@@ -32,4 +32,15 @@ try {
 // Initialize Services
 export const auth = app.auth();
 export const db = app.firestore();
+
+// Configure Firestore to handle undefined values and work offline
+db.settings({ ignoreUndefinedProperties: true });
+db.enablePersistence().catch((err) => {
+  if (err.code === 'failed-precondition') {
+    console.warn('Firebase persistence failed: Multiple tabs open');
+  } else if (err.code === 'unimplemented') {
+    console.warn('Firebase persistence not supported by browser');
+  }
+});
+
 export const googleProvider = new firebase.auth.GoogleAuthProvider();
