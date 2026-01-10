@@ -1,10 +1,10 @@
 
-import firebase from "firebase/compat/app";
-import "firebase/compat/auth";
-import "firebase/compat/firestore";
-import "firebase/compat/analytics";
+import * as firebaseApp from "firebase/app";
+import * as firebaseAnalytics from "firebase/analytics";
+import * as firebaseAuth from "firebase/auth";
+import * as firebaseFirestore from "firebase/firestore";
 
-// Firebase configuration for adbfc-earning
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCaUiV2XAhHglRYIFndPzMTy7SR5ADEQjA",
   authDomain: "adbfc-earning.firebaseapp.com",
@@ -17,30 +17,30 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
+const app = firebaseApp.initializeApp(firebaseConfig);
 
 // Initialize Analytics (Safely)
 let analytics;
 try {
-  if (typeof window !== 'undefined') {
-    analytics = firebase.analytics();
+  if (typeof window !== 'undefined' && firebaseAnalytics.getAnalytics) {
+    analytics = firebaseAnalytics.getAnalytics(app);
   }
 } catch (error) {
   console.warn("Firebase Analytics could not be initialized:", error);
 }
 
 // Initialize Services
-export const auth = app.auth();
-export const db = app.firestore();
+export const auth = firebaseAuth.getAuth(app);
 
-// Configure Firestore to handle undefined values and work offline
-db.settings({ ignoreUndefinedProperties: true });
-db.enablePersistence().catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn('Firebase persistence failed: Multiple tabs open');
-  } else if (err.code === 'unimplemented') {
-    console.warn('Firebase persistence not supported by browser');
-  }
+// Initialize Firestore with specific settings
+// We use initializeFirestore instead of getFirestore to apply settings immediately
+export const db = firebaseFirestore.initializeFirestore(app, {
+  ignoreUndefinedProperties: true
 });
 
-export const googleProvider = new firebase.auth.GoogleAuthProvider();
+export const googleProvider = new firebaseAuth.GoogleAuthProvider();
+
+// Export Auth functions to act as a facade and avoid direct package imports in components
+export const onAuthStateChanged = firebaseAuth.onAuthStateChanged;
+export const signOut = firebaseAuth.signOut;
+export const signInWithPopup = firebaseAuth.signInWithPopup;

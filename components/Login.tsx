@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { auth, googleProvider } from '../services/firebase';
+import { auth, googleProvider, signInWithPopup } from '../services/firebase';
 import { Lightbulb, AlertCircle } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -11,7 +11,7 @@ export const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      await auth.signInWithPopup(googleProvider);
+      await signInWithPopup(auth, googleProvider);
       // Auth state change will be handled in App.tsx
     } catch (err: any) {
       console.error("Login Failed", err);

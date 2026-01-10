@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, 
@@ -9,7 +10,7 @@ import {
 } from 'lucide-react';
 import { AppView, Transaction } from './types';
 import { getTransactions } from './services/storageService';
-import { auth } from './services/firebase';
+import { auth, onAuthStateChanged, signOut } from './services/firebase';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { Login } from './components/Login';
@@ -24,7 +25,7 @@ const App: React.FC = () => {
 
   // Monitor Auth State
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
       if (currentUser) {
@@ -71,7 +72,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await auth.signOut();
+    await signOut(auth);
     setTransactions([]);
   };
 

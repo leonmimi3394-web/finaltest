@@ -1,6 +1,7 @@
 
 import { Transaction, SalesSummary } from '../types';
 import { db, auth } from './firebase';
+import { collection, addDoc, deleteDoc, doc, getDocs, query, where, orderBy } from 'firebase/firestore';
 
 const STORAGE_KEY = 'lumibiz_transactions_v1';
 const COLLECTION_NAME = 'transactions';
@@ -11,11 +12,14 @@ const isCloudEnabled = () => !!auth.currentUser && !!db;
 export const getTransactions = async (): Promise<Transaction[]> => {
   if (isCloudEnabled() && auth.currentUser) {
     try {
-      // Fetch from Firestore (Compat syntax)
-      const querySnapshot = await db.collection(COLLECTION_NAME)
-        .where("userId", "==", auth.currentUser.uid)
-        .orderBy("date", "desc")
-        .get();
+      // Fetch from Firestore (Modular syntax)
+      const q = query(
+        collection(db, COLLECTION_NAME),
+        where("userId", "==", auth.currentUser.uid),
+        orderBy("date", "desc")
+      );
+
+      const querySnapshot = await getDocs(q);
         
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -37,7 +41,8 @@ export const saveTransaction = async (transaction: Transaction): Promise<void> =
     try {
       const { id, ...data } = transaction; 
       
-      await db.collection(COLLECTION_NAME).add({
+      // Add to Firestore (Modular syntax)
+      await addDoc(collection(db, COLLECTION_NAME), {
         ...data,
         userId: auth.currentUser.uid,
         createdAt: new Date()
@@ -57,7 +62,8 @@ export const saveTransaction = async (transaction: Transaction): Promise<void> =
 export const deleteTransaction = async (id: string): Promise<void> => {
   if (isCloudEnabled()) {
     try {
-      await db.collection(COLLECTION_NAME).doc(id).delete();
+      // Delete from Firestore (Modular syntax)
+      await deleteDoc(doc(db, COLLECTION_NAME, id));
     } catch (error) {
       console.error("Firestore Delete Error:", error);
       throw error;
